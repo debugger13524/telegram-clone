@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:telegramclone/services/auth.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({Key key}) : super(key: key);
+
+  final Function toggle;
+
+  LoginScreen(this.toggle);
+
+
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+
+  AuthMethods authMethods=AuthMethods();
+  TextEditingController emailLoginController=TextEditingController();
+  TextEditingController passwordLoginController=TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: <Widget>[
                           TextFormField(
+                            controller: emailLoginController,
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
                               hintText: 'abc@gmail.com',
@@ -72,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardType: TextInputType.emailAddress,
                           ),
                           TextFormField(
+                            controller: passwordLoginController,
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
                               labelText: "Password",
@@ -103,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "Login",
                             ),
                             splashColor: Colors.lightGreenAccent,
-                            onPressed: () => {},
+                            onPressed: (){}
                           ),
                         ],
                       ),
@@ -134,15 +147,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   height: 40,
                 ),
-                Container(
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Don\'t have an account? SignUp ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
+                GestureDetector(
+                  onTap: (){
+                    widget.toggle();
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Don\'t have an account? SignUp ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                      textAlign: TextAlign.right,
                     ),
-                    textAlign: TextAlign.right,
                   ),
                 ),
               ],

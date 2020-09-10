@@ -1,41 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:telegramclone/screens/chatRoomScreen.dart';
 import 'package:telegramclone/services/auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:telegramclone/services/database.dart';
+
+
 
 class Signup extends StatefulWidget {
+
+  final Function toggle;
+
+  Signup(this.toggle);
+
   @override
   _SignupState createState() => _SignupState();
 }
 
 class _SignupState extends State<Signup> {
-  bool _initialized = false;
+
   bool isLoading = false;
   final formKey = GlobalKey<FormState>();
 
   AuthMethods authMethods=AuthMethods();
+  DatabaseMethods databaseMethods=DatabaseMethods();
 
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  void initializeFlutterFire() async {
-    try {
-      // Wait for Firebase to initialize and set `_initialized` state to true
-      await Firebase.initializeApp();
-      setState(() {
-        _initialized = true;
-      });
-    } catch(e) {
-      print(e.toString());
-    }
-  }
+
   signMeUp() {
     if (formKey.currentState.validate()) {
+      Map<String,String> userInfoMap={
+        "name":usernameController.text,
+        "email":emailController.text,
+
+      };
       setState(() {
         isLoading = true;
       });
+
+      databaseMethods.uploadUserInfo(userInfoMap);
       authMethods.signUpWithEmailAndPassword(emailController.text, passwordController.text).then((value) {
-        print("$value");
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>ChatRoomScreen()));
       });
     }
   }
@@ -43,7 +49,7 @@ class _SignupState extends State<Signup> {
   void initState() {
 
     super.initState();
-    Firebase.initializeApp();
+
   }
 
   @override
@@ -98,7 +104,7 @@ class _SignupState extends State<Signup> {
                               primarySwatch: Colors.teal,
                               inputDecorationTheme: InputDecorationTheme(
                                 labelStyle: TextStyle(
-                                  color: Colors.greenAccent,
+                                  color: Colors.teal,
                                   fontSize: 20.0,
                                 ),
                               ),
@@ -108,6 +114,7 @@ class _SignupState extends State<Signup> {
                               child: Column(
                                 children: <Widget>[
                                   TextFormField(
+
                                     validator: (val) {
                                       return val.isEmpty
                                           ? "Please enter valid user name"
@@ -116,6 +123,7 @@ class _SignupState extends State<Signup> {
                                     controller: usernameController,
                                     textAlign: TextAlign.center,
                                     decoration: InputDecoration(
+
                                       labelText: 'Username',
                                     ),
                                     keyboardType: TextInputType.emailAddress,
@@ -192,15 +200,24 @@ class _SignupState extends State<Signup> {
                         SizedBox(
                           height: 40,
                         ),
-                        Container(
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Already have an account? SignIn ',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
+                        GestureDetector(
+                          onTap: (){
+                            widget.toggle();
+                          },
+
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Already have an account? SignIn ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
                             ),
-                            textAlign: TextAlign.right,
                           ),
                         ),
                       ],

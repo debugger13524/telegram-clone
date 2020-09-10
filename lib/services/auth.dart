@@ -3,7 +3,7 @@ import 'package:telegramclone/modals/user.dart';
 
 class AuthMethods {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  UserClass _userFormFirebaseUser(FirebaseUser user) {
+  UserClass _userFormFirebaseUser(User user) {
     return user != null ? UserClass(userId: user.uid) : null;
   }
 
@@ -11,7 +11,7 @@ class AuthMethods {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
-      FirebaseUser firebaseUser = result.user;
+      User firebaseUser = result.user;
       return _userFormFirebaseUser(firebaseUser);
     } catch (e) {
       print(e.toString());
@@ -22,7 +22,7 @@ class AuthMethods {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
-      FirebaseUser firebaseUser = result.user;
+      User firebaseUser = result.user;
       return _userFormFirebaseUser(firebaseUser);
     } catch (e) {
       print(e.toString());
