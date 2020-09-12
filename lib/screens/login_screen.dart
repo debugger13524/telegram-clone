@@ -1,24 +1,61 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:telegramclone/helper/helperFunctions.dart';
+import 'package:telegramclone/screens/chatRoomScreen.dart';
 import 'package:telegramclone/services/auth.dart';
+import 'package:telegramclone/services/database.dart';
 
 class LoginScreen extends StatefulWidget {
-
   final Function toggle;
 
   LoginScreen(this.toggle);
-
-
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final formKey = GlobalKey<FormState>();
+  bool isLoading = false;
+  QuerySnapshot snapshotUserInfo;
 
-  AuthMethods authMethods=AuthMethods();
-  TextEditingController emailLoginController=TextEditingController();
-  TextEditingController passwordLoginController=TextEditingController();
+  AuthMethods authMethods = AuthMethods();
+  DatabaseMethods databaseMethods = DatabaseMethods();
+  TextEditingController emailLoginController = TextEditingController();
+  TextEditingController passwordLoginController = TextEditingController();
+
+  signIn() {
+    if (formKey.currentState.validate()) {
+      HelperFunctions.saveUserEmailSharedPreference(emailLoginController.text);
+
+      databaseMethods.getUserByUserEmail(emailLoginController.text).then((val) {
+        snapshotUserInfo = val;
+        HelperFunctions.saveUserEmailSharedPreference(
+          snapshotUserInfo.docs[0].get("name"),
+
+        );
+
+      });
+      setState(() {
+        isLoading = true;
+      });
+
+
+      authMethods
+          .signInWithEmailAndPassword(
+              emailLoginController.text, passwordLoginController.text)
+          .then((value) {
+        if (value != null) {
+
+          HelperFunctions.saveUserLoggedInSharedPreference(true);
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => ChatRoomScreen()));
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 Form(
+                  key: formKey,
                   child: Theme(
                     data: ThemeData(
                       brightness: Brightness.dark,
@@ -76,6 +114,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: <Widget>[
                           TextFormField(
                             controller: emailLoginController,
+                            validator: (val) {
+                              return RegExp(
+                                          r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                      .hasMatch(val)
+                                  ? null
+                                  : "Enter valid email address";
+                            },
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
                               hintText: 'abc@gmail.com',
@@ -84,6 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardType: TextInputType.emailAddress,
                           ),
                           TextFormField(
+                            validator: (val) {
+                              return val.length > 6
+                                  ? null
+                                  : "Password must be 6 characters long";
+                            },
                             controller: passwordLoginController,
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
@@ -110,20 +160,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 30.0,
                           ),
                           MaterialButton(
-                            color: Colors.teal,
-                            textColor: Colors.white,
-                            child: Text(
-                              "Login",
-                            ),
-                            splashColor: Colors.lightGreenAccent,
-                            onPressed: (){}
-                          ),
+                              color: Colors.teal,
+                              textColor: Colors.white,
+                              child: Text(
+                                "Login",
+                              ),
+                              splashColor: Colors.lightGreenAccent,
+                              onPressed: () {
+                                signIn();
+                              }),
                         ],
                       ),
                     ),
                   ),
                 ),
-
                 _divider(),
                 MaterialButton(
                   onPressed: () => {},
@@ -140,7 +190,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Signin with google',
                         style: TextStyle(color: Colors.white70),
                       ),
-
                     ],
                   ),
                 ),
@@ -148,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 40,
                 ),
                 GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     widget.toggle();
                   },
                   child: Container(

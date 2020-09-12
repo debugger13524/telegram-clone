@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:telegramclone/helper/authentication.dart';
+import 'package:telegramclone/helper/helperFunctions.dart';
 import 'package:telegramclone/services/auth.dart';
 import 'package:telegramclone/screens/search.dart';
+import 'package:telegramclone/helper/constants.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   @override
@@ -11,6 +13,18 @@ class ChatRoomScreen extends StatefulWidget {
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   AuthMethods authMethods=new AuthMethods();
+
+  @override
+  void initState() {
+    getUserInfo();
+    // TODO: implement initState
+    super.initState();
+  }
+
+  getUserInfo() async
+  {
+    Constants.myName=await HelperFunctions.getUserNameSharedPreference();
+  }
   @override
   Widget build(BuildContext context) {
     return Theme(

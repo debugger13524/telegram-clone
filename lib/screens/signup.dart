@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:telegramclone/helper/helperFunctions.dart';
 import 'package:telegramclone/screens/chatRoomScreen.dart';
 import 'package:telegramclone/services/auth.dart';
 import 'package:telegramclone/services/database.dart';
@@ -23,6 +24,7 @@ class _SignupState extends State<Signup> {
   AuthMethods authMethods=AuthMethods();
   DatabaseMethods databaseMethods=DatabaseMethods();
 
+
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -35,11 +37,16 @@ class _SignupState extends State<Signup> {
         "email":emailController.text,
 
       };
+
+      HelperFunctions.saveUserEmailSharedPreference(emailController.text);
+      HelperFunctions.saveUserNameSharedPreference(usernameController.text);
+
       setState(() {
         isLoading = true;
       });
 
       databaseMethods.uploadUserInfo(userInfoMap);
+      HelperFunctions.saveUserLoggedInSharedPreference(true);
       authMethods.signUpWithEmailAndPassword(emailController.text, passwordController.text).then((value) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>ChatRoomScreen()));
       });

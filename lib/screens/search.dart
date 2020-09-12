@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:telegramclone/helper/constants.dart';
 import 'package:telegramclone/services/database.dart';
+import 'package:telegramclone/screens/conversation_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -8,26 +10,106 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  DatabaseMethods databaseMethods = DatabaseMethods();
+  bool showList = false;
+
   TextEditingController searchController = TextEditingController();
+  DatabaseMethods databaseMethods = DatabaseMethods();
 
   QuerySnapshot searchSnapshot;
-  initializeSearch() {
+  initiateSearch() {
     databaseMethods.getUserByUsername(searchController.text).then((val) {
-      print(val.toString());
-      searchSnapshot = val;
+      print(val.docs[0].get('email'));
+      setState(() {
+        searchSnapshot = val;
+      });
     });
   }
 
+  createChatRoomAndStartConversation({String userName}) {
+    if (userName != Constants.myName) {
+      String chatRoomId = getChatRoomId(userName, Constants.myName);
+      List<String> users = [userName, Constants.myName];
+      Map<String, dynamic> chatRoomMap = {
+        "users": users,
+        "chatRoomId": chatRoomId,
+      };
+      DatabaseMethods().createChatRoom(chatRoomId, chatRoomMap);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConversationScreen(chatRoomId),
+        ),
+      );
+    } else {
+      print("Cannot send message to yourself");
+    }
+  }
+
+  Widget SearchTile({String userName, String userEmail}) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Container(
+          color: Colors.white10,
+          child: Row(
+            children: <Widget>[
+              Column(
+                children: <Widget>[
+                  Text(
+                    userName,
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    userEmail,
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              Spacer(),
+              GestureDetector(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 10.0, horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.teal,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('message'),
+                      ),
+                      onTap: () {
+                        createChatRoomAndStartConversation(userName: userName);
+                      },
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget searchList() {
-    return ListView.builder(
-        itemCount: searchSnapshot.docs.length,
-        itemBuilder: (context, index) {
-          return SearchTile(
-            userEmail: searchSnapshot.docs[index].data['email'],
-            userName: searchSnapshot.docs[index].data['name'],
-          );
-        });
+    return searchSnapshot != null
+        ? ListView.builder(
+            shrinkWrap: true,
+            itemCount: searchSnapshot.docs.length,
+            itemBuilder: (context, index) {
+              return SearchTile(
+                userEmail: searchSnapshot.docs[0].get('email'),
+                userName: searchSnapshot.docs[0].get('name'),
+              );
+            })
+        : Container();
   }
 
   @override
@@ -63,7 +145,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                     MaterialButton(
-                      onPressed: () {},
+                      onPressed: initiateSearch,
                       child: CircleAvatar(
                         backgroundColor: Colors.teal,
                         child: Icon(
@@ -74,6 +156,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ],
                 ),
               ),
+              searchList(),
             ],
           ),
         ),
@@ -82,43 +165,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-class SearchTile extends StatelessWidget {
-  final String userName;
-  final String userEmail;
-
-  SearchTile({this.userEmail, this.userName});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white10,
-      child: Row(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              Text(
-                userName,
-                style: TextStyle(
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
-          Spacer(),
-          GestureDetector(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.teal,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text('message'),
-              ),
-            ),
-          )
-        ],
-      ),
-    );
+getChatRoomId(String a, String b) {
+  if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+    return "$b\_$a";
+  } else {
+    return "$a\_$b";
   }
 }
