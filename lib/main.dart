@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'helper/authentication.dart';
-import 'helper/helperFunctions.dart';
-import 'screens/chatRoomScreen.dart';
+import 'package:telegramclone/screens/login_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -16,34 +15,19 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
-  bool userIsLoggedIn=false;
-
-  @override
-  void initState() {
-   getLoggedInState();
-    super.initState();
-  }
-
-  getLoggedInState() async
-  {
-    await HelperFunctions.getUserLoggedInSharedPreference().then((value){
-      setState(() {
-        userIsLoggedIn=value;
-      });
-    });
-  }
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Telegram Clone',
-      theme: ThemeData(
-
-        primaryColor: Colors.lightBlueAccent,
-
-
-      ),
-      home: AuthenticationState()
-    );
+        title: 'Let\'s Talk',
+        theme: ThemeData(
+          primaryColor: Colors.green,
+          backgroundColor: Colors.teal,
+          accentColor: Colors.tealAccent,
+          buttonTheme: ButtonTheme.of(context).copyWith(buttonColor: Colors.teal,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),),
+        ),
+        home: SignInScreen());
   }
 }
