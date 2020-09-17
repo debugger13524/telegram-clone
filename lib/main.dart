@@ -25,7 +25,7 @@ class _MyAppState extends State<MyApp> {
           accentColor: Colors.tealAccent,
           buttonTheme: ButtonTheme.of(context).copyWith(buttonColor: Colors.teal,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20)
           ),),
         ),
         home: SignInScreen());

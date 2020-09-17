@@ -35,6 +35,8 @@ dependencies:
   shared_preferences: ^0.5.10
   image_picker: ^0.6.7+7
   firebase_storage: ^4.0.0
+  bubble: ^1.1.9+1
+  firebase_messaging: ^7.0.0
 
 dev_dependencies:
   flutter_test:
