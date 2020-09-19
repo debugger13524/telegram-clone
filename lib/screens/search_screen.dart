@@ -15,27 +15,30 @@ class _SearchListState extends State<SearchList> {
   var myName;
 
   Widget chatRoomList() {
-    return chatRoomStream == null ? SizedBox() : StreamBuilder(
-      stream: chatRoomStream,
-      builder: (context, snapshot) {
-        if(snapshot.connectionState == ConnectionState.waiting) return SizedBox();
-        return snapshot.hasData
-            ? ListView.builder(
-                itemCount: snapshot.data.docs.length,
-                itemBuilder: (context, index) {
-                  var i;
-                  for( String name  in snapshot.data.documents[index].get('users') ){
-                   // print(i);
-                    if(name != myName)
-                      i = name;
-                  }
-                  return ChatRoomTile(
-                    userName: i ,
-                  );
-                })
-            : Container();
-      },
-    );
+    return chatRoomStream == null
+        ? SizedBox()
+        : StreamBuilder(
+            stream: chatRoomStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting)
+                return SizedBox();
+              return snapshot.hasData
+                  ? ListView.builder(
+                      itemCount: snapshot.data.docs.length,
+                      itemBuilder: (context, index) {
+                        var i;
+                        for (String name
+                            in snapshot.data.documents[index].get('users')) {
+                          // print(i);
+                          if (name != myName) i = name;
+                        }
+                        return ChatRoomTile(
+                          userName: i,
+                        );
+                      })
+                  : Container();
+            },
+          );
   }
 
   Widget appBarTitle = new Text(
@@ -93,11 +96,13 @@ class _SearchListState extends State<SearchList> {
     super.initState();
     _isSearching = false;
 
-
-
-    final uid =  FirebaseAuth.instance.currentUser.uid;
-    FirebaseFirestore.instance.collection('users').doc(uid).get().then((docsnap) {
-       myName = docsnap.get('userName');
+    final uid = FirebaseAuth.instance.currentUser.uid;
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get()
+        .then((docsnap) {
+      myName = docsnap.get('userName');
       print(myName);
       setState(() {
         chatRoomStream = FirebaseFirestore.instance
@@ -105,7 +110,6 @@ class _SearchListState extends State<SearchList> {
             .where("users", arrayContains: myName)
             .snapshots();
       });
-
     });
   }
 
@@ -189,8 +193,7 @@ class _SearchListState extends State<SearchList> {
         centerTitle: true,
         title: appBarTitle,
         actions: <Widget>[
-
-           IconButton(
+          IconButton(
             icon: icon,
             onPressed: () {
               setState(() {
@@ -304,8 +307,6 @@ class SearchTile extends StatelessWidget {
     }
   }
 
-  void createChatRoomAndStartConversation() async {}
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -368,30 +369,92 @@ class SearchTile extends StatelessWidget {
   }
 }
 
-class ChatRoomTile extends StatelessWidget {
+class ChatRoomTile extends StatefulWidget {
   final String userName;
-  var documentSnapshot,userEmail,image_url;
+
   ChatRoomTile({this.userName});
 
-  getUserFromUserName()async {
-    FirebaseFirestore.instance.collection('users').where(
-        'userName', isEqualTo: userName).get().then((value) => userEmail=value);
+  @override
+  _ChatRoomTileState createState() => _ChatRoomTileState();
+}
+
+class _ChatRoomTileState extends State<ChatRoomTile> {
+  QuerySnapshot querySnapshot;
+  String userEmail, image_url, myName;
+  String chatRoomId;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  getMyName() async {
+    final uid = FirebaseAuth.instance.currentUser.uid;
+    DocumentSnapshot documentSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    myName = await documentSnapshot.get('userName');
+    chatRoomId = getChatRoomId(widget.userName, myName);
+  }
+
+  getChatRoomId(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      child: GestureDetector(
+        onTap: () async {
+          final uid = FirebaseAuth.instance.currentUser.uid;
+          DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+          final myName = documentSnapshot.get('userName');
+          print(myName);
+          print(widget.userName);
+          if (widget.userName != myName) {
+            String chatRoomId = getChatRoomId(widget.userName, myName);
+            List<String> users = [widget.userName, myName];
+            Map<String, dynamic> chatRoomMap = {
+              "users": users,
+              "chatRoomId": chatRoomId,
+            };
 
-      child: Row(
-        children: <Widget>[
-          SizedBox(
-            width: 8,
+            FirebaseFirestore.instance
+                .collection('ChatRoom')
+                .doc(chatRoomId)
+                .set(chatRoomMap);
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ConversationScreen(
+                  chatRoomId: chatRoomId,
+                  myName: myName,
+                ),
+              ),
+            );
+          }
+        },
+        child: Card(
+          child: Container(
+            alignment: Alignment.center,
+            height: 50,
+            child: Text(
+              widget.userName,
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          Text(userEmail),
-        ],
+        ),
       ),
     );
   }
 }
-
-
