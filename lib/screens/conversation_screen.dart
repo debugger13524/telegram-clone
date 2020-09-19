@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bubble/bubble.dart';
 
 class ConversationScreen extends StatefulWidget {
@@ -40,7 +39,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       stream: chatMessageStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return CircularProgressIndicator();
+          return Center(child: CircularProgressIndicator());
         } else {
           return ListView.builder(
             itemCount: snapshot.data.docs.length,

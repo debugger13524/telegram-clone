@@ -31,29 +31,32 @@ class _SignInScreenState extends State<SignInScreen> {
         userCredential = await _auth.createUserWithEmailAndPassword(
             email: userEmail, password: userPassword);
         print(userCredential.user.uid.toString());
+
+
+
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('user_image')
+            .child(userCredential.user.uid + '.jpg');
+
+        await ref
+            .putFile(
+          image,
+        )
+            .onComplete;
+
+        final url = await ref.getDownloadURL();
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user.uid)
+            .set({
+          'userName': userName,
+          'userEmail': userEmail,
+          'image_url': url,
+        });
       }
 
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('user_image')
-          .child(userCredential.user.uid + '.jpg');
-
-      await ref
-          .putFile(
-            image,
-          )
-          .onComplete;
-
-      final url = await ref.getDownloadURL();
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user.uid)
-          .set({
-        'userName': userName,
-        'userEmail': userEmail,
-        'image_url': url,
-      });
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

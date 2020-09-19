@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:telegramclone/screens/conversation_screen.dart';
+import 'package:telegramclone/screens/drawer_screen.dart';
+import 'package:telegramclone/screens/login_screen.dart';
 
 class SearchList extends StatefulWidget {
   @override
@@ -10,17 +12,25 @@ class SearchList extends StatefulWidget {
 
 class _SearchListState extends State<SearchList> {
   Stream chatRoomStream;
+  var myName;
 
   Widget chatRoomList() {
-    return StreamBuilder(
+    return chatRoomStream == null ? SizedBox() : StreamBuilder(
       stream: chatRoomStream,
       builder: (context, snapshot) {
+        if(snapshot.connectionState == ConnectionState.waiting) return SizedBox();
         return snapshot.hasData
             ? ListView.builder(
                 itemCount: snapshot.data.docs.length,
                 itemBuilder: (context, index) {
+                  var i;
+                  for( String name  in snapshot.data.documents[index].get('users') ){
+                   // print(i);
+                    if(name != myName)
+                      i = name;
+                  }
                   return ChatRoomTile(
-                    userName: snapshot.data.documents[index].data['chatRoomId'],
+                    userName: i ,
                   );
                 })
             : Container();
@@ -29,8 +39,9 @@ class _SearchListState extends State<SearchList> {
   }
 
   Widget appBarTitle = new Text(
-    "Search Example",
-    style: TextStyle(color: Colors.white),
+    "Lets\'s Talk",
+    style: TextStyle(
+        color: Colors.white, fontWeight: FontWeight.w300, letterSpacing: 3),
   );
   Icon icon = Icon(
     Icons.search,
@@ -69,16 +80,32 @@ class _SearchListState extends State<SearchList> {
     return myName;
   }
 
+  currentUserImageUrl() async {
+    final uid1 = FirebaseAuth.instance.currentUser.uid;
+    DocumentSnapshot documentSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(uid1).get();
+    final image_url = documentSnapshot.get('image_url');
+    return image_url;
+  }
+
   @override
   void initState() {
     super.initState();
     _isSearching = false;
 
-    setState(() {
-      chatRoomStream = FirebaseFirestore.instance
-          .collection("ChatRoom")
-          .where("users", arrayContains: currentUserName())
-          .snapshots();
+
+
+    final uid =  FirebaseAuth.instance.currentUser.uid;
+    FirebaseFirestore.instance.collection('users').doc(uid).get().then((docsnap) {
+       myName = docsnap.get('userName');
+      print(myName);
+      setState(() {
+        chatRoomStream = FirebaseFirestore.instance
+            .collection("ChatRoom")
+            .where("users", arrayContains: myName)
+            .snapshots();
+      });
+
     });
   }
 
@@ -119,6 +146,7 @@ class _SearchListState extends State<SearchList> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+        drawer: DrawerScreen(),
         key: globalKey,
         appBar: buildAppBar(context),
         body: Stack(
@@ -161,7 +189,8 @@ class _SearchListState extends State<SearchList> {
         centerTitle: true,
         title: appBarTitle,
         actions: <Widget>[
-          new IconButton(
+
+           IconButton(
             icon: icon,
             onPressed: () {
               setState(() {
@@ -190,6 +219,26 @@ class _SearchListState extends State<SearchList> {
                 }
               });
             },
+          ),
+          Container(
+            child: IconButton(
+              icon: Icon(
+                Icons.exit_to_app,
+              ),
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (BuildContext context) => SignInScreen(),
+                  ),
+                );
+              },
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.teal,
+            ),
           ),
         ],
         backgroundColor: Colors.teal,
@@ -321,19 +370,28 @@ class SearchTile extends StatelessWidget {
 
 class ChatRoomTile extends StatelessWidget {
   final String userName;
-
+  var documentSnapshot,userEmail,image_url;
   ChatRoomTile({this.userName});
+
+  getUserFromUserName()async {
+    FirebaseFirestore.instance.collection('users').where(
+        'userName', isEqualTo: userName).get().then((value) => userEmail=value);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
+
       child: Row(
         children: <Widget>[
           SizedBox(
             width: 8,
           ),
-          Text(userName),
+          Text(userEmail),
         ],
       ),
     );
   }
 }
+
+

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:telegramclone/screens/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:telegramclone/screens/search_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,17 @@ class _MyAppState extends State<MyApp> {
             borderRadius: BorderRadius.circular(20)
           ),),
         ),
-        home: SignInScreen());
+        home: StreamBuilder(
+    stream: FirebaseAuth.instance.authStateChanges(),
+    builder: (context,userSnapshot){
+      if(userSnapshot.hasData)
+        {
+          return SearchList();
+        }
+      else{
+        return SignInScreen();
+      }
+    },
+    ),);
   }
 }
