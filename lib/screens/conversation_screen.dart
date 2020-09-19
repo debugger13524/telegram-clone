@@ -5,7 +5,9 @@ import 'package:bubble/bubble.dart';
 class ConversationScreen extends StatefulWidget {
   final String chatRoomId;
   final String myName;
-  ConversationScreen({this.chatRoomId, this.myName});
+  final String userName;
+  final String image_url;
+  ConversationScreen({this.chatRoomId, this.myName,this.userName,this.image_url});
   @override
   _ConversationScreenState createState() => _ConversationScreenState();
 }
@@ -69,7 +71,22 @@ class _ConversationScreenState extends State<ConversationScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.teal,
-        title: Text('Let\'s Talk'),
+        title: Row(
+          children: <Widget>[
+            Image(
+              width: 25,
+              image: NetworkImage(widget.image_url),
+            ),
+            SizedBox(
+              width: 20,
+            ),
+            Text(widget.userName,
+            style: TextStyle(
+              fontWeight: FontWeight.w300
+            ),)
+          ],
+        ),
+
       ),
       body: Container(
         child: Stack(

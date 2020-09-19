@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:telegramclone/pickers/user_image_picker.dart';
 import 'package:telegramclone/widgets/divider.dart';
@@ -22,6 +24,7 @@ class _AuthFormState extends State<AuthForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isLogin = true;
   File _userImageFile;
+  var _auth;
 
   void _pickedImage(File image) {
     _userImageFile = image;
@@ -30,6 +33,7 @@ class _AuthFormState extends State<AuthForm> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController userNameController = TextEditingController();
+
 
   void _trySubmit() {
     FocusScope.of(context).unfocus();
@@ -153,15 +157,34 @@ class _AuthFormState extends State<AuthForm> {
                       height: 20.0,
                     ),
                     if (_isLogin)
-                      Container(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'Forgot password',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 15,
+                      MaterialButton(
+                        onPressed: () async{
+                          if(emailController.text.isEmpty)
+                            {
+                              Scaffold.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Please Enter your registered email  and then press the Forgot password button'),
+                                  ),);
+                            }
+                          else{
+                            Scaffold.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Password Reset Settings has been sent to your Registered Email'),
+                              ),);
+                          }
+                         final _auth= FirebaseAuth.instance;
+                         _auth.sendPasswordResetEmail(email: emailController.text);
+                        },
+                        child: Container(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'Forgot password',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 15,
+                            ),
+                            textAlign: TextAlign.right,
                           ),
-                          textAlign: TextAlign.right,
                         ),
                       ),
                     SizedBox(
@@ -187,25 +210,7 @@ class _AuthFormState extends State<AuthForm> {
             ),
           ),
           if (_isLogin && !widget.isLoading) DividerLine(),
-          if (_isLogin && !widget.isLoading)
-            MaterialButton(
-              onPressed: () => {},
-              child: Column(
-                children: <Widget>[
-                  Image(
-                    image: AssetImage('images/google_icon.png'),
-                    width: 60,
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    'Signin with google',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
+
           if (_isLogin)
             SizedBox(
               height: 40,

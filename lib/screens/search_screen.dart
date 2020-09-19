@@ -382,19 +382,31 @@ class _ChatRoomTileState extends State<ChatRoomTile> {
   QuerySnapshot querySnapshot;
   String userEmail, image_url, myName;
   String chatRoomId;
+  var snap;
 
   @override
   void initState() {
+    print("Tejas");
+    getimage_url();
     super.initState();
   }
 
-  getMyName() async {
-    final uid = FirebaseAuth.instance.currentUser.uid;
-    DocumentSnapshot documentSnapshot =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    myName = await documentSnapshot.get('userName');
-    chatRoomId = getChatRoomId(widget.userName, myName);
+  getimage_url() {
+    FirebaseFirestore.instance
+        .collection('users')
+        .where('userName', isEqualTo: widget.userName)
+        .getDocuments()
+        .then((value) {
+      setState(() {
+        snap = value;
+        image_url = snap.documents[0].get('image_url');
+        print('=============================================1');
+        print(image_url);
+      });
+    });
   }
+
+
 
   getChatRoomId(String a, String b) {
     if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
@@ -436,20 +448,37 @@ class _ChatRoomTileState extends State<ChatRoomTile> {
                 builder: (context) => ConversationScreen(
                   chatRoomId: chatRoomId,
                   myName: myName,
+                  userName: widget.userName,
+                  image_url: image_url,
                 ),
               ),
             );
           }
         },
         child: Card(
-          child: Container(
-            alignment: Alignment.center,
-            height: 50,
-            child: Text(
-              widget.userName,
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.all(30.0),
+            child: Container(
+
+
+              child: Row(
+
+                children: <Widget>[
+                  image_url == null
+                      ? Text('')
+                      : Image(
+                     width: 40,
+                    image: NetworkImage(image_url),
+                  ),
+                  SizedBox(
+                    width: 50,
+                  ),
+                  Text(widget.userName,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),),
+                ],
               ),
             ),
           ),

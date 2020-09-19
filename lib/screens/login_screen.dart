@@ -30,39 +30,54 @@ class _SignInScreenState extends State<SignInScreen> {
       } else {
         userCredential = await _auth.createUserWithEmailAndPassword(
             email: userEmail, password: userPassword);
-        print(userCredential.user.uid.toString());
+        try {
+          userCredential.user.sendEmailVerification();
 
+          print(userCredential.user.uid.toString());
 
+          final ref = FirebaseStorage.instance
+              .ref()
+              .child('user_image')
+              .child(userCredential.user.uid + '.jpg');
 
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child('user_image')
-            .child(userCredential.user.uid + '.jpg');
+          await ref
+              .putFile(
+                image,
+              )
+              .onComplete;
 
-        await ref
-            .putFile(
-          image,
-        )
-            .onComplete;
+          final url = await ref.getDownloadURL();
 
-        final url = await ref.getDownloadURL();
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userCredential.user.uid)
+              .set({
+            'userName': userName,
+            'userEmail': userEmail,
+            'image_url': url,
+          });
+        } catch (e) {
+          print(e.toString());
+        }
+      }
+      if(userCredential.user.emailVerified) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SearchList(),
+          ),
+        );
+      }
+      else{
+        Scaffold.of(ctx).showSnackBar(
+            SnackBar(
+              content: Text('Please verify your email and Login'),
+            ),);
+        setState(() {
 
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user.uid)
-            .set({
-          'userName': userName,
-          'userEmail': userEmail,
-          'image_url': url,
+          _isLoading = false;
         });
       }
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SearchList(),
-        ),
-      );
     } catch (e) {
       setState(() {
         _isLoading = false;
