@@ -1,21 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ConversationScreen extends StatefulWidget {
   final String chatRoomId;
   final String myName;
   final String userName;
   final String image_url;
-  ConversationScreen({this.chatRoomId, this.myName,this.userName,this.image_url});
+
+  ConversationScreen(
+      {this.chatRoomId, this.myName, this.userName, this.image_url});
   @override
   _ConversationScreenState createState() => _ConversationScreenState();
 }
 
 class _ConversationScreenState extends State<ConversationScreen> {
+  String text;
+  stt.SpeechToText _speech = stt.SpeechToText();
   TextEditingController messageController = TextEditingController();
   Stream chatMessageStream;
-
+  bool _isListening = false;
   sendMessage() {
     print(widget.myName);
     if (messageController.text.isNotEmpty) {
@@ -44,6 +50,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
           return Center(child: CircularProgressIndicator());
         } else {
           return ListView.builder(
+            reverse: true,
+            shrinkWrap: true,
             itemCount: snapshot.data.docs.length,
             itemBuilder: (context, index) {
               return MessageTile(snapshot.data.docs[index].get('message'),
@@ -61,7 +69,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
         .collection('ChatRoom')
         .doc(widget.chatRoomId)
         .collection('chats')
-        .orderBy("time", descending: false)
+        .orderBy("time", descending: true)
         .snapshots();
     super.initState();
   }
@@ -73,25 +81,44 @@ class _ConversationScreenState extends State<ConversationScreen> {
         backgroundColor: Colors.teal,
         title: Row(
           children: <Widget>[
-            Image(
-              width: 25,
-              image: NetworkImage(widget.image_url),
+            Container(
+              width: 35,
+              height: 35,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                    image: widget.image_url == null
+                        ? NetworkImage('')
+                        : NetworkImage(widget.image_url),
+                    fit: BoxFit.fill),
+              ),
             ),
+//            Container(
+//              width: 50,
+//              height: 50,
+//              decoration: BoxDecoration(
+//                shape: BoxShape.circle,
+//                image: DecorationImage(
+//                    image: NetworkImage(image_url), fit: BoxFit.fill),
+//              ),
+//            ),
             SizedBox(
               width: 20,
             ),
-            Text(widget.userName,
-            style: TextStyle(
-              fontWeight: FontWeight.w300
-            ),)
+            Text(
+              widget.userName == null ? '' : widget.userName,
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+
+              ),
+            )
           ],
         ),
-
       ),
       body: Container(
-        child: Stack(
+        child: Column(
           children: <Widget>[
-            ChatMessageList(),
+            Expanded(child: ChatMessageList()),
             Container(
               alignment: Alignment.bottomRight,
               child: Container(
@@ -101,8 +128,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       child: new Container(
                         margin: new EdgeInsets.symmetric(horizontal: 1.0),
                         child: new IconButton(
-                          onPressed: () {},
-                          icon: new Icon(Icons.face),
+                          onPressed: () {
+                            print("listen function called");
+                            _listen();
+                          },
+                          icon: new Icon(Icons.mic_outlined),
                           color: Colors.teal,
                         ),
                       ),
@@ -155,6 +185,37 @@ class _ConversationScreenState extends State<ConversationScreen> {
       ),
     );
   }
+
+  void _listen() async {
+    print("1");
+
+    try {
+      if (!_isListening) {
+        print("2");
+
+        bool available = await _speech.initialize(
+          onStatus: (val) => print('onStatus: $val'),
+          onError: (val) => print('onError: $val'),
+        );
+
+        if (available) {
+          print("3");
+          setState(() => _isListening = true);
+          _speech.listen(
+            onResult: (val) => setState(() {
+              messageController.text = val.recognizedWords;
+              print(text);
+            }),
+          );
+        }
+      } else {
+        setState(() => _isListening = false);
+        _speech.stop();
+      }
+    } catch (e) {
+      print(".................................\n\n\n\n\n\n$e");
+    }
+  }
 }
 
 class MessageTile extends StatelessWidget {
@@ -165,17 +226,19 @@ class MessageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
-      alignment: isSendByMe?Alignment.centerRight:Alignment.centerLeft,
+      width: 120,
+
+      alignment: isSendByMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Bubble(
-        color: isSendByMe?Color.fromRGBO(219, 248, 199,1):Color.fromRGBO(230,221,214,1),
-        margin: BubbleEdges.all(3) ,
-         style: BubbleStyle(
-             nip: isSendByMe?(BubbleNip.rightTop):(BubbleNip.leftTop)
-         ),
+        color: isSendByMe
+            ? Color.fromRGBO(219, 248, 199, 1)
+            : Color.fromRGBO(230, 221, 214, 1),
+        margin: BubbleEdges.all(3),
+        style: BubbleStyle(
+            nip: isSendByMe ? (BubbleNip.rightTop) : (BubbleNip.leftTop)),
         child: Text(
           message,
-          style: TextStyle(fontSize: 15),
+          style: TextStyle(fontSize: 25),
         ),
       ),
     );

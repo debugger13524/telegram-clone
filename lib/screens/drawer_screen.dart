@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:telegramclone/screens/login_screen.dart';
 
 class DrawerScreen extends StatelessWidget {
@@ -76,9 +77,11 @@ class DrawerScreen extends StatelessWidget {
                   builder: (context, snapshot) {
                     return snapshot.hasData
                         ? Container(
+                      alignment: Alignment.centerLeft,
+                      padding: EdgeInsets.fromLTRB(15,5,5,0),
                             child: Text(
                               snapshot.data,
-                              style: TextStyle(
+                              style: GoogleFonts.poppins(
                                 fontSize: 35,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -96,12 +99,15 @@ class DrawerScreen extends StatelessWidget {
                   builder: (context, snapshot) {
                     return snapshot.hasData
                         ? Container(
+                      padding: EdgeInsets.fromLTRB(15,0,5,5),
+                      alignment: Alignment.centerLeft,
                             child: Text(
                               snapshot.data,
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.w300),
+                              overflow: TextOverflow.fade,
+                              style: GoogleFonts.lato(
+                                fontSize: 18,
+                              ),
+
                             ),
                           )
                         : Container();

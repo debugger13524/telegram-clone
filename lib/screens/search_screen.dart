@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:telegramclone/screens/conversation_screen.dart';
 import 'package:telegramclone/screens/drawer_screen.dart';
 import 'package:telegramclone/screens/login_screen.dart';
@@ -117,7 +118,7 @@ class _SearchListState extends State<SearchList> {
     final querySnap =
         await FirebaseFirestore.instance.collection('users').get();
     for (DocumentSnapshot documentSnapshot in querySnap.docs) {
-      if (documentSnapshot.get('userName').toString().contains(searchText))
+      if (documentSnapshot.get('userName').toString().toLowerCase().contains(searchText.toLowerCase()))
         _list.add(documentSnapshot);
       print(documentSnapshot.get('userName'));
     }
@@ -309,13 +310,22 @@ class SearchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return  Card(
+      elevation: 1,
       child: ListTile(
-        title: Text(userName),
-        subtitle: Text(userEmail),
-        leading: Image(
-          image: NetworkImage(image_url),
-          height: 40,
+        title: Text(userName,style: GoogleFonts.montserrat(),),
+        subtitle: Text(userEmail,),
+        leading:  Container(
+          width: 35,
+          height: 35,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+                image: image_url == null
+                    ? NetworkImage('')
+                    : NetworkImage(image_url),
+                fit: BoxFit.fill),
+          ),
         ),
         trailing: FlatButton(
           onPressed: () async {
@@ -346,6 +356,8 @@ class SearchTile extends StatelessWidget {
                   builder: (context) => ConversationScreen(
                     chatRoomId: chatRoomId,
                     myName: myName,
+                    userName: userName,
+                    image_url: image_url,
                   ),
                 ),
               );
@@ -386,12 +398,12 @@ class _ChatRoomTileState extends State<ChatRoomTile> {
 
   @override
   void initState() {
-    print("Tejas");
     getimage_url();
     super.initState();
   }
 
-  getimage_url() {
+  getimage_url() async{
+
     FirebaseFirestore.instance
         .collection('users')
         .where('userName', isEqualTo: widget.userName)
@@ -399,14 +411,13 @@ class _ChatRoomTileState extends State<ChatRoomTile> {
         .then((value) {
       setState(() {
         snap = value;
+
         image_url = snap.documents[0].get('image_url');
         print('=============================================1');
         print(image_url);
       });
     });
   }
-
-
 
   getChatRoomId(String a, String b) {
     if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
@@ -431,16 +442,6 @@ class _ChatRoomTileState extends State<ChatRoomTile> {
           print(widget.userName);
           if (widget.userName != myName) {
             String chatRoomId = getChatRoomId(widget.userName, myName);
-            List<String> users = [widget.userName, myName];
-            Map<String, dynamic> chatRoomMap = {
-              "users": users,
-              "chatRoomId": chatRoomId,
-            };
-
-            FirebaseFirestore.instance
-                .collection('ChatRoom')
-                .doc(chatRoomId)
-                .set(chatRoomMap);
 
             Navigator.push(
               context,
@@ -455,31 +456,43 @@ class _ChatRoomTileState extends State<ChatRoomTile> {
             );
           }
         },
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(30.0),
-            child: Container(
+        child: Container(
+          decoration: BoxDecoration(
 
-
-              child: Row(
-
-                children: <Widget>[
-                  image_url == null
-                      ? Text('')
-                      : Image(
-                     width: 40,
-                    image: NetworkImage(image_url),
-                  ),
-                  SizedBox(
-                    width: 50,
-                  ),
-                  Text(widget.userName,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),),
-                ],
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey,
+                offset: Offset(0.0, 0.0), //(x,y)
+                blurRadius: 2.0,
               ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 5, 5, 20),
+            child: Row(
+              children: <Widget>[
+                image_url == null
+                    ? CircularProgressIndicator()
+                    : Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                              image: NetworkImage(image_url), fit: BoxFit.fill),
+                        ),
+                      ),
+                SizedBox(
+                  width: 50,
+                ),
+                Text(
+                  widget.userName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 23,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
