@@ -27,6 +27,26 @@ class _SignInScreenState extends State<SignInScreen> {
       if (isLogin) {
         userCredential = await _auth.signInWithEmailAndPassword(
             email: userEmail, password: userPassword);
+
+        if(userCredential.user.emailVerified) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SearchList(),
+            ),
+          );
+        }
+        else{
+          Scaffold.of(ctx).showSnackBar(
+            SnackBar(
+              content: Text('Please verify your email and Login'),
+            ),);
+          setState(() {
+
+            _isLoading = false;
+          });
+        }
+
       } else {
         userCredential = await _auth.createUserWithEmailAndPassword(
             email: userEmail, password: userPassword);
@@ -56,28 +76,21 @@ class _SignInScreenState extends State<SignInScreen> {
             'userEmail': userEmail,
             'image_url': url,
           });
+
+          Scaffold.of(ctx).showSnackBar(
+            SnackBar(
+              content: Text('Please verify your email and Login'),
+            ),);
+          setState(() {
+
+            _isLoading = false;
+          });
+
         } catch (e) {
           print(e.toString());
         }
       }
-      if(userCredential.user.emailVerified) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SearchList(),
-          ),
-        );
-      }
-      else{
-        Scaffold.of(ctx).showSnackBar(
-            SnackBar(
-              content: Text('Please verify your email and Login'),
-            ),);
-        setState(() {
 
-          _isLoading = false;
-        });
-      }
     } catch (e) {
       setState(() {
         _isLoading = false;
