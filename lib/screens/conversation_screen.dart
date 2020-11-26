@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
 
 class ConversationScreen extends StatefulWidget {
   final String chatRoomId;
@@ -16,12 +16,21 @@ class ConversationScreen extends StatefulWidget {
   _ConversationScreenState createState() => _ConversationScreenState();
 }
 
-class _ConversationScreenState extends State<ConversationScreen> {
+class _ConversationScreenState extends State<ConversationScreen>
+{
+  FlutterTts flutterTts=FlutterTts();
   String text;
-  stt.SpeechToText _speech = stt.SpeechToText();
   TextEditingController messageController = TextEditingController();
   Stream chatMessageStream;
   bool _isListening = false;
+
+  Future speak(String text) async
+  {
+    await flutterTts.setLanguage('en-IN');
+    await flutterTts.setPitch(1);
+    await flutterTts.setVolume(1);
+    await flutterTts.speak(text);
+  }
   sendMessage() {
     print(widget.myName);
     if (messageController.text.isNotEmpty) {
@@ -130,7 +139,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                         child: new IconButton(
                           onPressed: () {
                             print("listen function called");
-                            _listen();
+                            speak(messageController.text);
                           },
                           icon: new Icon(Icons.mic_outlined),
                           color: Colors.teal,
@@ -186,36 +195,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
-  void _listen() async {
-    print("1");
-
-    try {
-      if (!_isListening) {
-        print("2");
-
-        bool available = await _speech.initialize(
-          onStatus: (val) => print('onStatus: $val'),
-          onError: (val) => print('onError: $val'),
-        );
-
-        if (available) {
-          print("3");
-          setState(() => _isListening = true);
-          _speech.listen(
-            onResult: (val) => setState(() {
-              messageController.text = val.recognizedWords;
-              print(text);
-            }),
-          );
-        }
-      } else {
-        setState(() => _isListening = false);
-        _speech.stop();
-      }
-    } catch (e) {
-      print(".................................\n\n\n\n\n\n$e");
-    }
-  }
 }
 
 class MessageTile extends StatelessWidget {
